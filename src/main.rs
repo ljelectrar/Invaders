@@ -12,7 +12,8 @@ fn main()  -> Result<(), Box<dyn Error>> {
     audio.add("pew", "pew.wav");
     audio.add("startup", "startup.wav");
     audio.add("win", "win.wav");
-    audio.play("starup");
+
+    audio.play("startup");
 
     // Terminal
     let mut stdout = io::stdout();
@@ -26,7 +27,7 @@ fn main()  -> Result<(), Box<dyn Error>> {
         while event::poll(Duration::default())? {
             if let Event::Key(key_event) = event::read()? {
                 match key_event.code {
-                    KeyCode::Esc | KeyCode::Char('q') => {
+                    KeyCode::Esc | KeyCode::Char('s') => {
                         audio.play("lose");
                         break 'gameloop;
                     }
