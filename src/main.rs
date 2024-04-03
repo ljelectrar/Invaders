@@ -7,10 +7,7 @@ use crossterm::{
 use invaders::{frame::{self, new_frame, Drawable}, player::Player, render};
 use rusty_audio::Audio;
 use std::{
-    error::Error,
-    sync::mpsc::{self},
-    time::Duration,
-    {io, thread},
+    error::Error, io, sync::mpsc, thread, time::{Duration, Instant}
 };
 
 
@@ -53,9 +50,12 @@ fn main()  -> Result<(), Box<dyn Error>> {
 
     // GAME LOOP
     let mut player = Player::new();
+    let mut instant = Instant::now();
 
     'gameloop: loop {
         // Per-Frame init
+        let delta = instant.elapsed();
+        instant = Instant::now();
         let mut curr_frame = new_frame();
 
         // input
@@ -65,6 +65,12 @@ fn main()  -> Result<(), Box<dyn Error>> {
                     // Player Movement
                     KeyCode::Left => player.move_left(),
                     KeyCode::Right => player.move_right(),
+
+                    KeyCode::Char(' ') | KeyCode::Enter => {
+                        if player.shoot() {
+                            audio.play("pew");
+                        }
+                    }
     
                     KeyCode::Esc | KeyCode::Char('s') => {
                         audio.play("lose");
@@ -74,6 +80,8 @@ fn main()  -> Result<(), Box<dyn Error>> {
                 }
             }
         }
+
+        player.update(delta);
 
         // Draw & Render
         player.draw(&mut curr_frame);
