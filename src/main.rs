@@ -1,8 +1,18 @@
-use std::{error::Error, io::{self, Stdout}, os::windows::thread, sync::mpsc, time::Duration};
-use crossterm::{cursor::{Hide, Show}, event::{self, Event, KeyCode}, 
-terminal::{self, EnterAlternateScreen, LeaveAlternateScreen}, ExecutableCommand};
-use invaders::{frame::{self, new_frame}, render::render};
+use crossterm::{
+    cursor::{Hide, Show},
+    event::{self, Event, KeyCode},
+    terminal::{self, EnterAlternateScreen, LeaveAlternateScreen},
+    ExecutableCommand,
+};
+use invaders::{frame::{self, new_frame, Drawable}, player::Player, render};
 use rusty_audio::Audio;
+use std::{
+    error::Error,
+    sync::mpsc::{self},
+    time::Duration,
+    {io, thread},
+};
+
 
 fn main()  -> Result<(), Box<dyn Error>> {
     
@@ -42,14 +52,20 @@ fn main()  -> Result<(), Box<dyn Error>> {
     });
 
     // GAME LOOP
+    let mut player = Player::new();
+
     'gameloop: loop {
         // Per-Frame init
-        let curr_frame = new_frame();
+        let mut curr_frame = new_frame();
 
         // input
         while event::poll(Duration::default())? {
             if let Event::Key(key_event) = event::read()? {
                 match key_event.code {
+                    // Player Movement
+                    KeyCode::Left => player.move_left(),
+                    KeyCode::Right => player.move_right(),
+    
                     KeyCode::Esc | KeyCode::Char('s') => {
                         audio.play("lose");
                         break 'gameloop;
@@ -60,6 +76,8 @@ fn main()  -> Result<(), Box<dyn Error>> {
         }
 
         // Draw & Render
+        player.draw(&mut curr_frame);
+
         let _ = render_tx.send(curr_frame);
         thread::sleep(Duration::from_millis(1));
     }
